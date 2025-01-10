@@ -11,3 +11,18 @@ ORDER BY created_at DESC;
 INSERT INTO jobs (id, job_type, payload)
 VALUES ($1, $2, $3)
 RETURNING *;
+
+-- name: CreateJobAndProcess :one
+INSERT INTO jobs (id, job_type, payload, status)
+VALUES ($1, $2, $3, 'processing')
+RETURNING *;
+
+-- name: FinishJob :exec
+UPDATE jobs
+SET status = $2, result = $3
+WHERE id = $1;
+
+-- name: UpdateJobStatus :exec
+UPDATE jobs
+SET status = $2
+WHERE id = $1;

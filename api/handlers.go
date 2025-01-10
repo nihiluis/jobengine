@@ -79,11 +79,69 @@ func (api *API) getJobs(c echo.Context) error {
 	return c.JSON(http.StatusOK, jobs)
 }
 
+type CreateJobRequest struct {
+	JobType string         `json:"job_type"`
+	Payload map[string]any `json:"payload"`
+	Process bool           `json:"process"`
+}
+
+func (api *API) createJob(c echo.Context) error {
+	var req CreateJobRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, M{"error": "Invalid request"})
+	}
+
+	// Validate required fields
+	if req.JobType == "" {
+		return c.JSON(http.StatusBadRequest, M{"error": "job_type is required"})
+	}
+
+	ctx := c.Request().Context()
+
+	var (
+		job *queries.Job
+		err error
+	)
+
+	if req.Process {
+		job, err = api.queries.CreateJobAndProcess(ctx, req.JobType, req.Payload)
+	} else {
+		job, err = api.queries.CreateJob(ctx, req.JobType, req.Payload)
+	}
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, M{"error": "Failed to create job"})
+	}
+	return c.JSON(http.StatusOK, job)
+}
+
+type FinishJobRequest struct {
+	JobID  string         `json:"job_id"`
+	Result map[string]any `json:"result"`
+	Status string         `json:"status"`
+}
+
+func (api *API) finishJob(c echo.Context) error {
+	var req FinishJobRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, M{"error": "Invalid request"})
+	}
+
+	err := api.queries.FinishJob(c.Request().Context(), req.JobID, req.Status, req.Result)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, M{"error": "Failed to finish job"})
+	}
+
+	return c.JSON(http.StatusOK, M{"message": "Job finished"})
+}
+
 // registerRoutes registers all API routes
 func (api *API) registerRoutes() {
 	api.e.GET("/api/v1/ping", api.ping)
 	api.e.GET("/api/v1/job/:id", api.getJob)
 	api.e.GET("/api/v1/job/:status", api.getJobs)
+	api.e.POST("/api/v1/job", api.createJob)
+	api.e.POST("/api/v1/job/finish", api.finishJob)
 }
 
 // Start starts the HTTP server
