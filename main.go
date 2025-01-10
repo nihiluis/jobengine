@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/nihiluis/jobengine/api"
+	"github.com/nihiluis/jobengine/database"
 	"github.com/rs/zerolog/log"
-	"nihiluis.com/jobengine/api"
-	"nihiluis.com/jobengine/database"
 )
 
 func run() error {

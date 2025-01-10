@@ -5,8 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"nihiluis.com/jobengine/database"
-	"nihiluis.com/jobengine/database/queries"
+	"github.com/nihiluis/jobengine/database"
+	"github.com/nihiluis/jobengine/database/queries"
 )
 
 type M map[string]any

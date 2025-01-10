@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"nihiluis.com/jobengine/database/queries"
+	"github.com/nihiluis/jobengine/database/queries"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )

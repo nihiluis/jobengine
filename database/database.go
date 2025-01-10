@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/nihiluis/jobengine/database/queries"
 	"github.com/rs/zerolog/log"
-	"nihiluis.com/jobengine/database/queries"
 )
 
 // DB wraps the database connection and queries

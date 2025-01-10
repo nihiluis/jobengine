@@ -1,9 +1,8 @@
-module nihiluis.com/jobengine
+module github.com/nihiluis/jobengine
 
 go 1.22.1
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.3
