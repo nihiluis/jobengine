@@ -1,0 +1,43 @@
+.env
+.DS_Store
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Binary output directories
+bin/
+dist/
+
+# Go workspace file
+go.work
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependency directories
+vendor/
+
+# Log files
+*.log
+
+# Environment variables
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Temporary files
+tmp/
+temp/
+
+
