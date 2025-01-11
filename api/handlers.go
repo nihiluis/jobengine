@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -90,6 +91,21 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 		Description: "Finish a job",
 		Tags:        []string{"Jobs"},
 	}, api.finishJobHandler)
+}
+
+func (api *API) WriteOpenAPISpec() error {
+	b, err := api.app.OpenAPI().DowngradeYAML()
+	if err != nil {
+		return fmt.Errorf("failed to generate OpenAPI spec: %w", err)
+	}
+
+	err = os.WriteFile("openapi.yaml", b, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write OpenAPI spec: %w", err)
+	}
+
+	return nil
+
 }
 
 // Start starts the HTTP server

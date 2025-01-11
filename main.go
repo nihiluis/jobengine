@@ -27,6 +27,7 @@ func run() error {
 
 	queries := database.NewQueries(db)
 	api := api.NewAPI(queries)
+	api.WriteOpenAPISpec()
 
 	return api.Start()
 }
