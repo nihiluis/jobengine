@@ -8,7 +8,7 @@ import (
 
 type FinishJobInput struct {
 	Body struct {
-		JobID  string         `json:"job_id" validate:"required" doc:"The ID of the job that was finished"`
+		JobID  string         `json:"jobId" validate:"required" doc:"The ID of the job that was finished"`
 		Result map[string]any `json:"result" doc:"The result payload of the job"`
 		Status string         `json:"status" validate:"required" doc:"The new status of the job"`
 	}

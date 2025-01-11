@@ -7,21 +7,21 @@ import (
 	"github.com/nihiluis/jobengine/database/queries"
 )
 
-type CreateJobRequest struct {
-	Body struct {
-		JobType string         `json:"job_type" validate:"required" doc:"The type of the job to create"`
-		Payload map[string]any `json:"payload" doc:"The payload of the job"`
-		Process bool           `json:"process" doc:"Whether the job will process the job immediately"`
-	}
+type CreateJobRequestBody struct {
+	JobType string         `json:"jobType" validate:"required" doc:"The type of the job to create"`
+	Payload map[string]any `json:"payload" doc:"The payload of the job"`
+	Process bool           `json:"process" doc:"Whether the job will process the job immediately"`
 }
 
 type CreateJobOutput struct {
-	Body struct {
-		Job *queries.Job `json:"job" doc:"The created job" validate:"required"`
-	}
+	Body CreateJobResponseBody `json:"body"`
 }
 
-func (api *internalAPI) createJobHandler(ctx context.Context, input *CreateJobRequest) (*CreateJobOutput, error) {
+type CreateJobResponseBody struct {
+	Job *queries.Job `json:"job" doc:"The created job" validate:"required"`
+}
+
+func (api *internalAPI) createJobHandler(ctx context.Context, input *struct{ Body CreateJobRequestBody }) (*CreateJobOutput, error) {
 	var (
 		job *queries.Job
 		err error

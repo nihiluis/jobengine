@@ -49,7 +49,7 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 	huma.Register(humaApi, huma.Operation{
 		OperationID: "get-ping",
 		Method:      http.MethodGet,
-		Path:        "/ping",
+		Path:        "/api/v1/ping",
 		Summary:     "Health check endpoint",
 		Description: "Health check endpoint",
 		Tags:        []string{"Health"},
@@ -58,7 +58,7 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 	huma.Register(humaApi, huma.Operation{
 		OperationID: "get-job",
 		Method:      http.MethodGet,
-		Path:        "/job/{id}",
+		Path:        "/api/v1/jobs/{id}",
 		Summary:     "Get a job",
 		Description: "Get a job by ID",
 		Tags:        []string{"Jobs"},
@@ -76,7 +76,7 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 	huma.Register(humaApi, huma.Operation{
 		OperationID: "create-job",
 		Method:      http.MethodPost,
-		Path:        "/job",
+		Path:        "/api/v1/jobs",
 		Summary:     "Create a job",
 		Description: "Create a job",
 		Tags:        []string{"Jobs"},
@@ -85,7 +85,7 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 	huma.Register(humaApi, huma.Operation{
 		OperationID: "finish-job",
 		Method:      http.MethodPost,
-		Path:        "/job/{id}/finish",
+		Path:        "/api/v1/jobs/{id}/finish",
 		Summary:     "Finish a job",
 		Description: "Finish a job",
 		Tags:        []string{"Jobs"},

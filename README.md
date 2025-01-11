@@ -5,6 +5,11 @@
 ## OpenAPI
 See `http://localhost:<port>/api/v1/docs` when running.
 
+## Tests
+```bash
+go test ./...
+```
+
 ## How to
 .env
 ```
