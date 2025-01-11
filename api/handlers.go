@@ -1,150 +1,104 @@
 package api
 
 import (
+	"errors"
 	"net/http"
+	"os"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
+	"github.com/go-chi/chi/v5"
 	"github.com/nihiluis/jobengine/database"
-	"github.com/nihiluis/jobengine/database/queries"
+	"github.com/rs/zerolog/log"
 )
 
-type M map[string]any
+// Options for the CLI.
+type Options struct {
+	Port int `help:"Port to listen on" short:"p" default:"8888"`
+}
 
 // API struct holds dependencies for API handlers
 type API struct {
-	e       *echo.Echo
-	queries *database.Queries
+	app    huma.API
+	router *chi.Mux
+}
+
+type internalAPI struct {
+	queries database.Queries
 }
 
 // NewAPI creates a new instance of API
-func NewAPI(queries *database.Queries) *API {
-	e := echo.New()
-
-	// Add middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	api := &API{
-		e:       e,
+func NewAPI(queries database.Queries) *API {
+	internalAPI := &internalAPI{
 		queries: queries,
 	}
 
-	// Register routes
-	api.registerRoutes()
+	router := chi.NewMux()
+	humaApp := humachi.New(router, huma.DefaultConfig("My API", "1.0.0"))
 
-	return api
-}
+	internalAPI.registerRoutes(humaApp)
 
-func (api *API) ping(c echo.Context) error {
-	return c.JSON(http.StatusOK, M{
-		"message": "OK",
-	})
-}
-
-func (api *API) getJob(c echo.Context) error {
-	// Parse job ID from URL parameter
-	jobID := c.Param("id")
-
-	// Get job from database
-	job, err := api.queries.GetJobByID(c.Request().Context(), jobID)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, M{
-			"error": "Failed to fetch job",
-		})
+	return &API{
+		app:    humaApp,
+		router: router,
 	}
-
-	return c.JSON(http.StatusOK, job)
-}
-
-func (api *API) getJobs(c echo.Context) error {
-	jobStatusStr := c.Param("status")
-
-	var jobStatus queries.JobStatus
-	err := jobStatus.Scan(jobStatusStr)
-
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, M{
-			"error": "Invalid job status",
-		})
-	}
-
-	jobs, err := api.queries.GetJobsByStatus(c.Request().Context(), jobStatus)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, M{
-			"error": "Failed to fetch jobs",
-		})
-	}
-
-	return c.JSON(http.StatusOK, jobs)
-}
-
-type CreateJobRequest struct {
-	JobType string         `json:"job_type"`
-	Payload map[string]any `json:"payload"`
-	Process bool           `json:"process"`
-}
-
-func (api *API) createJob(c echo.Context) error {
-	var req CreateJobRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, M{"error": "Invalid request"})
-	}
-
-	// Validate required fields
-	if req.JobType == "" {
-		return c.JSON(http.StatusBadRequest, M{"error": "job_type is required"})
-	}
-
-	ctx := c.Request().Context()
-
-	var (
-		job *queries.Job
-		err error
-	)
-
-	if req.Process {
-		job, err = api.queries.CreateJobAndProcess(ctx, req.JobType, req.Payload)
-	} else {
-		job, err = api.queries.CreateJob(ctx, req.JobType, req.Payload)
-	}
-
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, M{"error": "Failed to create job"})
-	}
-	return c.JSON(http.StatusOK, job)
-}
-
-type FinishJobRequest struct {
-	JobID  string         `json:"job_id"`
-	Result map[string]any `json:"result"`
-	Status string         `json:"status"`
-}
-
-func (api *API) finishJob(c echo.Context) error {
-	var req FinishJobRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, M{"error": "Invalid request"})
-	}
-
-	err := api.queries.FinishJob(c.Request().Context(), req.JobID, req.Status, req.Result)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, M{"error": "Failed to finish job"})
-	}
-
-	return c.JSON(http.StatusOK, M{"message": "Job finished"})
 }
 
 // registerRoutes registers all API routes
-func (api *API) registerRoutes() {
-	api.e.GET("/api/v1/ping", api.ping)
-	api.e.GET("/api/v1/job/:id", api.getJob)
-	api.e.GET("/api/v1/job/:status", api.getJobs)
-	api.e.POST("/api/v1/job", api.createJob)
-	api.e.POST("/api/v1/job/finish", api.finishJob)
+func (api *internalAPI) registerRoutes(humaApi huma.API) {
+	huma.Register(humaApi, huma.Operation{
+		OperationID: "get-ping",
+		Method:      http.MethodGet,
+		Path:        "/ping",
+		Summary:     "Health check endpoint",
+		Description: "Health check endpoint",
+		Tags:        []string{"Health"},
+	}, api.pingHandler)
+
+	huma.Register(humaApi, huma.Operation{
+		OperationID: "get-job",
+		Method:      http.MethodGet,
+		Path:        "/job/{id}",
+		Summary:     "Get a job",
+		Description: "Get a job by ID",
+		Tags:        []string{"Jobs"},
+	}, api.getJobHandler)
+
+	huma.Register(humaApi, huma.Operation{
+		OperationID: "get-jobs",
+		Method:      http.MethodGet,
+		Path:        "/jobs",
+		Summary:     "Get jobs",
+		Description: "Get jobs",
+		Tags:        []string{"Jobs"},
+	}, api.getJobsHandler)
+
+	huma.Register(humaApi, huma.Operation{
+		OperationID: "create-job",
+		Method:      http.MethodPost,
+		Path:        "/job",
+		Summary:     "Create a job",
+		Description: "Create a job",
+		Tags:        []string{"Jobs"},
+	}, api.createJobHandler)
+
+	huma.Register(humaApi, huma.Operation{
+		OperationID: "finish-job",
+		Method:      http.MethodPost,
+		Path:        "/job/{id}/finish",
+		Summary:     "Finish a job",
+		Description: "Finish a job",
+		Tags:        []string{"Jobs"},
+	}, api.finishJobHandler)
 }
 
 // Start starts the HTTP server
-func (api *API) Start(address string) error {
-	return api.e.Start(address)
+func (api *API) Start() error {
+	apiAddress := os.Getenv("ADDRESS")
+	if apiAddress == "" {
+		return errors.New("ADDRESS is not set")
+	}
+
+	log.Info().Msgf("Starting server on %s", apiAddress)
+	return http.ListenAndServe(apiAddress, api.router)
 }

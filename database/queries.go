@@ -8,20 +8,20 @@ import (
 	"github.com/nihiluis/jobengine/database/queries"
 )
 
-// Queries wraps the generated queries and adds custom functionality
-type Queries struct {
+// QueriesImpl wraps the generated queries and adds custom functionality
+type QueriesImpl struct {
 	db *DB
 }
 
 // NewQueries creates a new Queries instance
-func NewQueries(db *DB) *Queries {
-	return &Queries{
+func NewQueries(db *DB) *QueriesImpl {
+	return &QueriesImpl{
 		db: db,
 	}
 }
 
 // GetJobByID wraps the generated GetJobByID query
-func (q *Queries) GetJobByID(ctx context.Context, id string) (*queries.Job, error) {
+func (q *QueriesImpl) GetJobByID(ctx context.Context, id string) (*queries.Job, error) {
 	// Convert string ID to pgtype.UUID
 	pgID, err := stringToUUID(id)
 	if err != nil {
@@ -36,12 +36,12 @@ func (q *Queries) GetJobByID(ctx context.Context, id string) (*queries.Job, erro
 }
 
 // GetJobsByStatus wraps the generated GetJobsByStatus query
-func (q *Queries) GetJobsByStatus(ctx context.Context, status queries.JobStatus) ([]queries.Job, error) {
+func (q *QueriesImpl) GetJobsByStatus(ctx context.Context, status queries.JobStatus) ([]queries.Job, error) {
 	return q.db.queries.GetJobsByStatus(ctx, status)
 }
 
 // CreateJob creates a new job in the database
-func (q *Queries) CreateJob(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
+func (q *QueriesImpl) CreateJob(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
@@ -60,7 +60,7 @@ func (q *Queries) CreateJob(ctx context.Context, jobType string, payload map[str
 	return &job, nil
 }
 
-func (q *Queries) CreateJobAndProcess(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
+func (q *QueriesImpl) CreateJobAndProcess(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
@@ -79,7 +79,7 @@ func (q *Queries) CreateJobAndProcess(ctx context.Context, jobType string, paylo
 	return &job, nil
 }
 
-func (q *Queries) FinishJob(ctx context.Context, jobIDStr string, status string, result map[string]any) error {
+func (q *QueriesImpl) FinishJob(ctx context.Context, jobIDStr string, status string, result map[string]any) error {
 	jobID, err := stringToUUID(jobIDStr)
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)

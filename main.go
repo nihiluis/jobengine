@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/nihiluis/jobengine/api"
@@ -30,12 +28,7 @@ func run() error {
 	queries := database.NewQueries(db)
 	api := api.NewAPI(queries)
 
-	apiAddress := os.Getenv("API_ADDRESS")
-	if apiAddress == "" {
-		return errors.New("API_ADDRESS is not set")
-	}
-
-	return api.Start(apiAddress)
+	return api.Start()
 }
 
 func main() {
