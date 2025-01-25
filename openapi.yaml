@@ -34,7 +34,7 @@ components:
           readOnly: true
           type: string
         job:
-          $ref: "#/components/schemas/Job"
+          $ref: "#/components/schemas/JobOutput"
           description: The created job
       required:
         - job
@@ -211,6 +211,35 @@ components:
         - CreatedBy
         - LockedBy
         - Version
+      type: object
+    JobOutput:
+      additionalProperties: false
+      properties:
+        createdAt:
+          description: The creation time of the job
+          type: string
+        id:
+          description: The ID of the job
+          type: string
+        jobType:
+          description: The type of the job
+          type: string
+        payload:
+          description: The payload of the job
+          type: string
+        result:
+          description: The result of the job
+          type: string
+        status:
+          description: The status of the job
+          type: string
+      required:
+        - id
+        - jobType
+        - status
+        - payload
+        - result
+        - createdAt
       type: object
     PingOutputBody:
       additionalProperties: false
