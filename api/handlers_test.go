@@ -47,7 +47,7 @@ func (m *StubQueries) GetJobsByStatus(ctx context.Context, status queries.JobSta
 	}, nil
 }
 
-func (m *StubQueries) FinishJob(ctx context.Context, jobIDStr string, status string, result map[string]any) error {
+func (m *StubQueries) FinishJob(ctx context.Context, jobIDStr string, status string, message string, result map[string]any) error {
 	return nil
 }
 

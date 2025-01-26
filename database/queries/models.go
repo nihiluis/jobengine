@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -59,7 +60,7 @@ func (ns NullJobStatus) Value() (driver.Value, error) {
 
 // Stores background jobs and their execution status
 type Job struct {
-	ID pgtype.UUID
+	ID uuid.UUID
 	// Type of job (e.g., email, image_processing)
 	JobType string
 	// Current job status (pending, processing, completed, failed)
@@ -68,6 +69,7 @@ type Job struct {
 	Payload []byte
 	// Output/result data from the job execution
 	Result      []byte
+	OutMessage  pgtype.Text
 	RetryCount  int32
 	StartedAt   pgtype.Timestamptz
 	CompletedAt pgtype.Timestamptz

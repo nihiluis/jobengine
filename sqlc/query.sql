@@ -19,7 +19,7 @@ RETURNING *;
 
 -- name: FinishJob :exec
 UPDATE jobs
-SET status = $2, result = $3
+SET status = $2, result = $3, out_message = $4
 WHERE id = $1;
 
 -- name: UpdateJobStatus :exec

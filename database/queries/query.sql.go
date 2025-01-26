@@ -8,17 +8,18 @@ package queries
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createJob = `-- name: CreateJob :one
 INSERT INTO jobs (id, job_type, payload)
 VALUES ($1, $2, $3)
-RETURNING id, job_type, status, payload, result, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version
+RETURNING id, job_type, status, payload, result, out_message, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version
 `
 
 type CreateJobParams struct {
-	ID      pgtype.UUID
+	ID      uuid.UUID
 	JobType string
 	Payload []byte
 }
@@ -32,6 +33,7 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Job, erro
 		&i.Status,
 		&i.Payload,
 		&i.Result,
+		&i.OutMessage,
 		&i.RetryCount,
 		&i.StartedAt,
 		&i.CompletedAt,
@@ -47,11 +49,11 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Job, erro
 const createJobAndProcess = `-- name: CreateJobAndProcess :one
 INSERT INTO jobs (id, job_type, payload, status)
 VALUES ($1, $2, $3, 'processing')
-RETURNING id, job_type, status, payload, result, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version
+RETURNING id, job_type, status, payload, result, out_message, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version
 `
 
 type CreateJobAndProcessParams struct {
-	ID      pgtype.UUID
+	ID      uuid.UUID
 	JobType string
 	Payload []byte
 }
@@ -65,6 +67,7 @@ func (q *Queries) CreateJobAndProcess(ctx context.Context, arg CreateJobAndProce
 		&i.Status,
 		&i.Payload,
 		&i.Result,
+		&i.OutMessage,
 		&i.RetryCount,
 		&i.StartedAt,
 		&i.CompletedAt,
@@ -79,27 +82,33 @@ func (q *Queries) CreateJobAndProcess(ctx context.Context, arg CreateJobAndProce
 
 const finishJob = `-- name: FinishJob :exec
 UPDATE jobs
-SET status = $2, result = $3
+SET status = $2, result = $3, out_message = $4
 WHERE id = $1
 `
 
 type FinishJobParams struct {
-	ID     pgtype.UUID
-	Status JobStatus
-	Result []byte
+	ID         uuid.UUID
+	Status     JobStatus
+	Result     []byte
+	OutMessage pgtype.Text
 }
 
 func (q *Queries) FinishJob(ctx context.Context, arg FinishJobParams) error {
-	_, err := q.db.Exec(ctx, finishJob, arg.ID, arg.Status, arg.Result)
+	_, err := q.db.Exec(ctx, finishJob,
+		arg.ID,
+		arg.Status,
+		arg.Result,
+		arg.OutMessage,
+	)
 	return err
 }
 
 const getJobByID = `-- name: GetJobByID :one
-SELECT id, job_type, status, payload, result, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version FROM jobs
+SELECT id, job_type, status, payload, result, out_message, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version FROM jobs
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
+func (q *Queries) GetJobByID(ctx context.Context, id uuid.UUID) (Job, error) {
 	row := q.db.QueryRow(ctx, getJobByID, id)
 	var i Job
 	err := row.Scan(
@@ -108,6 +117,7 @@ func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
 		&i.Status,
 		&i.Payload,
 		&i.Result,
+		&i.OutMessage,
 		&i.RetryCount,
 		&i.StartedAt,
 		&i.CompletedAt,
@@ -121,7 +131,7 @@ func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
 }
 
 const getJobsByStatus = `-- name: GetJobsByStatus :many
-SELECT id, job_type, status, payload, result, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version FROM jobs
+SELECT id, job_type, status, payload, result, out_message, retry_count, started_at, completed_at, created_at, updated_at, created_by, locked_by, version FROM jobs
 WHERE status = $1
 ORDER BY created_at DESC
 `
@@ -141,6 +151,7 @@ func (q *Queries) GetJobsByStatus(ctx context.Context, status JobStatus) ([]Job,
 			&i.Status,
 			&i.Payload,
 			&i.Result,
+			&i.OutMessage,
 			&i.RetryCount,
 			&i.StartedAt,
 			&i.CompletedAt,
@@ -167,7 +178,7 @@ WHERE id = $1
 `
 
 type UpdateJobStatusParams struct {
-	ID     pgtype.UUID
+	ID     uuid.UUID
 	Status JobStatus
 }
 

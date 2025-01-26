@@ -103,6 +103,9 @@ components:
         jobId:
           description: The ID of the job that was finished
           type: string
+        message:
+          description: The message of the job
+          type: string
         result:
           additionalProperties: {}
           description: The result payload of the job
@@ -112,6 +115,7 @@ components:
           type: string
       required:
         - jobId
+        - message
         - result
         - status
       type: object
@@ -141,7 +145,7 @@ components:
           readOnly: true
           type: string
         job:
-          $ref: "#/components/schemas/Job"
+          $ref: "#/components/schemas/JobOutput"
           description: The job
       required:
         - job
@@ -158,59 +162,11 @@ components:
         jobs:
           description: The jobs
           items:
-            $ref: "#/components/schemas/Job"
+            $ref: "#/components/schemas/JobOutput"
           nullable: true
           type: array
       required:
         - jobs
-      type: object
-    Job:
-      additionalProperties: false
-      properties:
-        CompletedAt:
-          $ref: "#/components/schemas/Timestamptz"
-        CreatedAt:
-          $ref: "#/components/schemas/Timestamptz"
-        CreatedBy:
-          $ref: "#/components/schemas/Text"
-        ID:
-          $ref: "#/components/schemas/UUID"
-        JobType:
-          type: string
-        LockedBy:
-          $ref: "#/components/schemas/Text"
-        Payload:
-          format: base64
-          type: string
-        Result:
-          format: base64
-          type: string
-        RetryCount:
-          format: int32
-          type: integer
-        StartedAt:
-          $ref: "#/components/schemas/Timestamptz"
-        Status:
-          type: string
-        UpdatedAt:
-          $ref: "#/components/schemas/Timestamptz"
-        Version:
-          format: int32
-          type: integer
-      required:
-        - ID
-        - JobType
-        - Status
-        - Payload
-        - Result
-        - RetryCount
-        - StartedAt
-        - CompletedAt
-        - CreatedAt
-        - UpdatedAt
-        - CreatedBy
-        - LockedBy
-        - Version
       type: object
     JobOutput:
       additionalProperties: false
@@ -223,6 +179,9 @@ components:
           type: string
         jobType:
           description: The type of the job
+          type: string
+        outMessage:
+          description: The message of the job
           type: string
         payload:
           description: The payload of the job
@@ -239,6 +198,7 @@ components:
         - status
         - payload
         - result
+        - outMessage
         - createdAt
       type: object
     PingOutputBody:
@@ -256,45 +216,6 @@ components:
           type: string
       required:
         - message
-      type: object
-    Text:
-      additionalProperties: false
-      properties:
-        String:
-          type: string
-        Valid:
-          type: boolean
-      required:
-        - String
-        - Valid
-      type: object
-    Timestamptz:
-      additionalProperties: false
-      properties:
-        InfinityModifier:
-          format: int32
-          type: integer
-        Time:
-          format: date-time
-          type: string
-        Valid:
-          type: boolean
-      required:
-        - Time
-        - InfinityModifier
-        - Valid
-      type: object
-    UUID:
-      additionalProperties: false
-      properties:
-        Bytes:
-          format: base64
-          type: string
-        Valid:
-          type: boolean
-      required:
-        - Bytes
-        - Valid
       type: object
 info:
   title: My API
@@ -327,6 +248,32 @@ paths:
       summary: Create a job
       tags:
         - Jobs
+  /api/v1/jobs/finish:
+    post:
+      description: Finish a job
+      operationId: finish-job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FinishJobInputBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinishJobOutputBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Finish a job
+      tags:
+        - Jobs
   /api/v1/jobs/{id}:
     get:
       description: Get a job by ID
@@ -353,32 +300,6 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get a job
-      tags:
-        - Jobs
-  /api/v1/jobs/{id}/finish:
-    post:
-      description: Finish a job
-      operationId: finish-job
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FinishJobInputBody"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FinishJobOutputBody"
-          description: OK
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ErrorModel"
-          description: Error
-      summary: Finish a job
       tags:
         - Jobs
   /api/v1/ping:

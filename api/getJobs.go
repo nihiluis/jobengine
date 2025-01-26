@@ -9,7 +9,7 @@ import (
 
 type GetJobsOutput struct {
 	Body struct {
-		Jobs *[]queries.Job `json:"jobs" doc:"The jobs"`
+		Jobs *[]JobOutput `json:"jobs" doc:"The jobs"`
 	}
 }
 
@@ -28,8 +28,13 @@ func (api *internalAPI) getJobsHandler(ctx context.Context, input *struct {
 		return nil, huma.Error500InternalServerError("failed to fetch jobs")
 	}
 
+	jobsOutput := make([]JobOutput, len(jobs))
+	for i, job := range jobs {
+		jobsOutput[i].FromQueries(&job)
+	}
+
 	resp := &GetJobsOutput{}
-	resp.Body.Jobs = &jobs
+	resp.Body.Jobs = &jobsOutput
 
 	return resp, nil
 }

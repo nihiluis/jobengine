@@ -2,13 +2,11 @@ package api
 
 import (
 	"context"
-
-	"github.com/nihiluis/jobengine/database/queries"
 )
 
 type GetJobOutput struct {
 	Body struct {
-		Job *queries.Job `json:"job" doc:"The job"`
+		Job *JobOutput `json:"job" doc:"The job"`
 	}
 }
 
@@ -25,7 +23,8 @@ func (api *internalAPI) getJobHandler(ctx context.Context, input *struct {
 	}
 
 	resp := &GetJobOutput{}
-	resp.Body.Job = job
+	resp.Body.Job = &JobOutput{}
+	resp.Body.Job.FromQueries(job)
 
 	return resp, nil
 }

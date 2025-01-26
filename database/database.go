@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nihiluis/jobengine/database/queries"
 	"github.com/rs/zerolog/log"
+	pgxUUID "github.com/vgarvardt/pgx-google-uuid/v5"
 )
 
 // DB wraps the database connection and queries
@@ -28,6 +30,11 @@ func New(ctx context.Context) (*DB, error) {
 	config, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing database URL: %w", err)
+	}
+
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		pgxUUID.Register(conn.TypeMap())
+		return nil
 	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)

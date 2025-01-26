@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     status job_status NOT NULL DEFAULT 'pending',
     payload JSONB NOT NULL,
     result JSONB,
+    out_message TEXT,
     retry_count INTEGER NOT NULL DEFAULT 0,
     started_at TIMESTAMPTZ,
     completed_at TIMESTAMPTZ,

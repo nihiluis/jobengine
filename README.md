@@ -1,6 +1,12 @@
 # jobengine
 ## Requirements
 - PostgreSQL
+- sqlc
+
+## Code generation
+```bash
+sqlc generate
+```
 
 ## OpenAPI
 See `http://localhost:<port>/api/v1/docs` when running.

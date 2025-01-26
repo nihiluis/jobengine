@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/nihiluis/jobengine/database/queries"
 )
 
@@ -22,13 +24,12 @@ func NewQueries(db *DB) *QueriesImpl {
 
 // GetJobByID wraps the generated GetJobByID query
 func (q *QueriesImpl) GetJobByID(ctx context.Context, id string) (*queries.Job, error) {
-	// Convert string ID to pgtype.UUID
-	pgID, err := stringToUUID(id)
+	uuid, err := stringToGoogleUUID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	job, err := q.db.queries.GetJobByID(ctx, pgID)
+	job, err := q.db.queries.GetJobByID(ctx, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +49,7 @@ func (q *QueriesImpl) CreateJob(ctx context.Context, jobType string, payload map
 	}
 
 	params := queries.CreateJobParams{
+		ID:      uuid.New(),
 		JobType: jobType,
 		Payload: payloadBytes,
 	}
@@ -67,6 +69,7 @@ func (q *QueriesImpl) CreateJobAndProcess(ctx context.Context, jobType string, p
 	}
 
 	params := queries.CreateJobAndProcessParams{
+		ID:      uuid.New(),
 		JobType: jobType,
 		Payload: payloadBytes,
 	}
@@ -79,8 +82,8 @@ func (q *QueriesImpl) CreateJobAndProcess(ctx context.Context, jobType string, p
 	return &job, nil
 }
 
-func (q *QueriesImpl) FinishJob(ctx context.Context, jobIDStr string, status string, result map[string]any) error {
-	jobID, err := stringToUUID(jobIDStr)
+func (q *QueriesImpl) FinishJob(ctx context.Context, jobIDStr string, status string, message string, result map[string]any) error {
+	jobID, err := stringToGoogleUUID(jobIDStr)
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
 	}
@@ -102,8 +105,9 @@ func (q *QueriesImpl) FinishJob(ctx context.Context, jobIDStr string, status str
 	}
 
 	return q.db.queries.FinishJob(ctx, queries.FinishJobParams{
-		ID:     jobID,
-		Result: payloadBytes,
-		Status: jobStatus,
+		ID:         jobID,
+		Result:     payloadBytes,
+		Status:     jobStatus,
+		OutMessage: pgtype.Text{String: message, Valid: true},
 	})
 }

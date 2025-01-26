@@ -9,6 +9,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/nihiluis/jobengine/database"
 	"github.com/rs/zerolog/log"
 )
@@ -35,8 +36,8 @@ func NewAPI(queries database.Queries) *API {
 	}
 
 	router := chi.NewMux()
+	router.Use(chiMiddleware.Logger)
 	humaApp := humachi.New(router, huma.DefaultConfig("My API", "1.0.0"))
-
 	internalAPI.registerRoutes(humaApp)
 
 	return &API{
@@ -86,7 +87,7 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 	huma.Register(humaApi, huma.Operation{
 		OperationID: "finish-job",
 		Method:      http.MethodPost,
-		Path:        "/api/v1/jobs/{id}/finish",
+		Path:        "/api/v1/jobs/finish",
 		Summary:     "Finish a job",
 		Description: "Finish a job",
 		Tags:        []string{"Jobs"},
