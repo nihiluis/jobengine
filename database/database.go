@@ -16,7 +16,7 @@ import (
 // DB wraps the database connection and queries
 type DB struct {
 	pool    *pgxpool.Pool
-	queries *queries.Queries
+	Queries *queries.Queries
 }
 
 // New creates a new database wrapper and establishes the connection pool
@@ -50,7 +50,7 @@ func New(ctx context.Context) (*DB, error) {
 
 	return &DB{
 		pool:    pool,
-		queries: queries.New(pool),
+		Queries: queries.New(pool),
 	}, nil
 }
 
@@ -62,7 +62,7 @@ func (db *DB) WithTx(ctx context.Context, fn func(*queries.Queries) error) error
 	}
 	defer tx.Rollback(ctx)
 
-	q := db.queries.WithTx(tx)
+	q := db.Queries.WithTx(tx)
 	if err := fn(q); err != nil {
 		return err
 	}

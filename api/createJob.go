@@ -29,9 +29,9 @@ func (api *internalAPI) createJobHandler(ctx context.Context, input *struct{ Bod
 	)
 
 	if input.Body.Process {
-		job, err = api.queries.CreateJobAndProcess(ctx, input.Body.JobType, input.Body.Payload)
+		job, err = api.jobService.CreateJobAndProcess(ctx, input.Body.JobType, input.Body.Payload)
 	} else {
-		job, err = api.queries.CreateJob(ctx, input.Body.JobType, input.Body.Payload)
+		job, err = api.jobService.CreateJob(ctx, input.Body.JobType, input.Body.Payload)
 	}
 
 	if err != nil {

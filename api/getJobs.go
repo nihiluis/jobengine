@@ -8,9 +8,11 @@ import (
 )
 
 type GetJobsOutput struct {
-	Body struct {
-		Jobs *[]JobOutput `json:"jobs" doc:"The jobs"`
-	}
+	Body GetJobsResponseBody
+}
+
+type GetJobsResponseBody struct {
+	Jobs *[]JobOutput `json:"jobs" doc:"The jobs"`
 }
 
 func (api *internalAPI) getJobsHandler(ctx context.Context, input *struct {
@@ -23,7 +25,7 @@ func (api *internalAPI) getJobsHandler(ctx context.Context, input *struct {
 		return nil, huma.Error400BadRequest("invalid job status")
 	}
 
-	jobs, err := api.queries.GetJobsByStatus(ctx, jobStatus)
+	jobs, err := api.jobService.GetJobsByStatus(ctx, jobStatus)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("failed to fetch jobs")
 	}

@@ -1,4 +1,4 @@
-package database
+package job
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/nihiluis/jobengine/database/queries"
 )
 
-type Queries interface {
+type JobService interface {
 	CreateJob(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error)
 	CreateJobAndProcess(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error)
 	GetJobByID(ctx context.Context, id string) (*queries.Job, error)

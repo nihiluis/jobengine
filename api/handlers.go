@@ -10,7 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/nihiluis/jobengine/database"
+	"github.com/nihiluis/jobengine/job"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,13 +26,13 @@ type API struct {
 }
 
 type internalAPI struct {
-	queries database.Queries
+	jobService job.JobService
 }
 
 // NewAPI creates a new instance of API
-func NewAPI(queries database.Queries) *API {
+func NewAPI(jobService job.JobService) *API {
 	internalAPI := &internalAPI{
-		queries: queries,
+		jobService: jobService,
 	}
 
 	router := chi.NewMux()
@@ -69,7 +69,7 @@ func (api *internalAPI) registerRoutes(humaApi huma.API) {
 	huma.Register(humaApi, huma.Operation{
 		OperationID: "get-jobs",
 		Method:      http.MethodGet,
-		Path:        "/jobs",
+		Path:        "/api/v1/jobs/status/{status}",
 		Summary:     "Get jobs",
 		Description: "Get jobs",
 		Tags:        []string{"Jobs"},

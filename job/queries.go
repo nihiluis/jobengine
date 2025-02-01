@@ -1,4 +1,4 @@
-package database
+package job
 
 import (
 	"context"
@@ -7,29 +7,31 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/nihiluis/jobengine/database"
 	"github.com/nihiluis/jobengine/database/queries"
+	"github.com/nihiluis/jobengine/utils"
 )
 
-// QueriesImpl wraps the generated queries and adds custom functionality
-type QueriesImpl struct {
-	db *DB
+// JobServiceImpl wraps the generated jobservice and adds custom functionality
+type JobServiceImpl struct {
+	db *database.DB
 }
 
-// NewQueries creates a new Queries instance
-func NewQueries(db *DB) *QueriesImpl {
-	return &QueriesImpl{
+// NewJobService creates a new JobService instance
+func NewJobService(db *database.DB) *JobServiceImpl {
+	return &JobServiceImpl{
 		db: db,
 	}
 }
 
 // GetJobByID wraps the generated GetJobByID query
-func (q *QueriesImpl) GetJobByID(ctx context.Context, id string) (*queries.Job, error) {
-	uuid, err := stringToGoogleUUID(id)
+func (q *JobServiceImpl) GetJobByID(ctx context.Context, id string) (*queries.Job, error) {
+	uuid, err := utils.StringToGoogleUUID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	job, err := q.db.queries.GetJobByID(ctx, uuid)
+	job, err := q.db.Queries.GetJobByID(ctx, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -37,12 +39,12 @@ func (q *QueriesImpl) GetJobByID(ctx context.Context, id string) (*queries.Job, 
 }
 
 // GetJobsByStatus wraps the generated GetJobsByStatus query
-func (q *QueriesImpl) GetJobsByStatus(ctx context.Context, status queries.JobStatus) ([]queries.Job, error) {
-	return q.db.queries.GetJobsByStatus(ctx, status)
+func (q *JobServiceImpl) GetJobsByStatus(ctx context.Context, status queries.JobStatus) ([]queries.Job, error) {
+	return q.db.Queries.GetJobsByStatus(ctx, status)
 }
 
 // CreateJob creates a new job in the database
-func (q *QueriesImpl) CreateJob(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
+func (q *JobServiceImpl) CreateJob(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
@@ -54,7 +56,7 @@ func (q *QueriesImpl) CreateJob(ctx context.Context, jobType string, payload map
 		Payload: payloadBytes,
 	}
 
-	job, err := q.db.queries.CreateJob(ctx, params)
+	job, err := q.db.Queries.CreateJob(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create job: %w", err)
 	}
@@ -62,7 +64,7 @@ func (q *QueriesImpl) CreateJob(ctx context.Context, jobType string, payload map
 	return &job, nil
 }
 
-func (q *QueriesImpl) CreateJobAndProcess(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
+func (q *JobServiceImpl) CreateJobAndProcess(ctx context.Context, jobType string, payload map[string]any) (*queries.Job, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
@@ -74,7 +76,7 @@ func (q *QueriesImpl) CreateJobAndProcess(ctx context.Context, jobType string, p
 		Payload: payloadBytes,
 	}
 
-	job, err := q.db.queries.CreateJobAndProcess(ctx, params)
+	job, err := q.db.Queries.CreateJobAndProcess(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create job: %w", err)
 	}
@@ -82,8 +84,8 @@ func (q *QueriesImpl) CreateJobAndProcess(ctx context.Context, jobType string, p
 	return &job, nil
 }
 
-func (q *QueriesImpl) FinishJob(ctx context.Context, jobIDStr string, status string, message string, result map[string]any) error {
-	jobID, err := stringToGoogleUUID(jobIDStr)
+func (q *JobServiceImpl) FinishJob(ctx context.Context, jobIDStr string, status string, message string, result map[string]any) error {
+	jobID, err := utils.StringToGoogleUUID(jobIDStr)
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
 	}
@@ -104,7 +106,7 @@ func (q *QueriesImpl) FinishJob(ctx context.Context, jobIDStr string, status str
 		return fmt.Errorf("failed to marshal result: %w", err)
 	}
 
-	return q.db.queries.FinishJob(ctx, queries.FinishJobParams{
+	return q.db.Queries.FinishJob(ctx, queries.FinishJobParams{
 		ID:         jobID,
 		Result:     payloadBytes,
 		Status:     jobStatus,

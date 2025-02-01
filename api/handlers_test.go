@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/danielgtaylor/huma/v2/humatest"
-	"github.com/nihiluis/jobengine/database"
 	"github.com/nihiluis/jobengine/database/queries"
+	"github.com/nihiluis/jobengine/job"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -51,9 +51,9 @@ func (m *StubQueries) FinishJob(ctx context.Context, jobIDStr string, status str
 	return nil
 }
 
-func setupMockApi(t *testing.T, queries database.Queries) humatest.TestAPI {
+func setupMockApi(t *testing.T, jobService job.JobService) humatest.TestAPI {
 	internalAPI := &internalAPI{
-		queries: queries,
+		jobService: jobService,
 	}
 
 	_, api := humatest.New(t)
@@ -77,7 +77,7 @@ func TestCreateJobProcessTrue(t *testing.T) {
 	var output CreateJobResponseBody
 	err := json.NewDecoder(resp.Body).Decode(&output)
 	assert.NoError(t, err)
-	assert.Equal(t, queries.JobStatusProcessing, output.Job.Status)
+	assert.Equal(t, string(queries.JobStatusProcessing), output.Job.Status)
 }
 
 func TestCreateJobProcessFalse(t *testing.T) {
@@ -94,5 +94,63 @@ func TestCreateJobProcessFalse(t *testing.T) {
 	var output CreateJobResponseBody
 	err := json.NewDecoder(resp.Body).Decode(&output)
 	assert.NoError(t, err)
-	assert.Equal(t, queries.JobStatusPending, output.Job.Status)
+	assert.Equal(t, string(queries.JobStatusPending), output.Job.Status)
+}
+
+func TestFinishJob(t *testing.T) {
+	humaApi := setupMockApi(t, &StubQueries{})
+
+	req := FinishJobRequestBody{
+		JobID:   "test-id",
+		Message: "Test completed",
+		Result:  map[string]any{"key": "value"},
+		Status:  string(queries.JobStatusCompleted),
+	}
+
+	resp := humaApi.Post("/api/v1/jobs/finish", req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var output FinishJobResponseBody
+	err := json.NewDecoder(resp.Body).Decode(&output)
+	assert.NoError(t, err)
+	assert.Equal(t, "OK", output.Message)
+}
+
+func TestGetJob(t *testing.T) {
+	humaApi := setupMockApi(t, &StubQueries{})
+
+	resp := humaApi.Get("/api/v1/jobs/test-id")
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var output GetJobResponseBody
+	err := json.NewDecoder(resp.Body).Decode(&output)
+	assert.NoError(t, err)
+	assert.Equal(t, "test-type", output.Job.JobType)
+	assert.Equal(t, string(queries.JobStatusProcessing), output.Job.Status)
+}
+
+func TestGetJobs(t *testing.T) {
+	humaApi := setupMockApi(t, &StubQueries{})
+
+	resp := humaApi.Get("/api/v1/jobs/status/processing")
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var output GetJobsResponseBody
+	t.Logf("Response body: %s", resp.Body)
+	err := json.NewDecoder(resp.Body).Decode(&output)
+	assert.NoError(t, err)
+	assert.Len(t, *output.Jobs, 1)
+	assert.Equal(t, "test-type", (*output.Jobs)[0].JobType)
+	assert.Equal(t, string(queries.JobStatusProcessing), (*output.Jobs)[0].Status)
+}
+
+func TestGetJobsInvalidStatus(t *testing.T) {
+	humaApi := setupMockApi(t, &StubQueries{})
+
+	resp := humaApi.Get("/api/v1/jobs/status/invalid-status")
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
 }

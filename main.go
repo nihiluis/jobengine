@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nihiluis/jobengine/api"
 	"github.com/nihiluis/jobengine/database"
+	"github.com/nihiluis/jobengine/job"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,8 +26,8 @@ func run() error {
 		return err
 	}
 
-	queries := database.NewQueries(db)
-	api := api.NewAPI(queries)
+	jobService := job.NewJobService(db)
+	api := api.NewAPI(jobService)
 	api.WriteOpenAPISpec()
 
 	return api.Start()

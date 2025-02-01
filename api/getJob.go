@@ -5,9 +5,11 @@ import (
 )
 
 type GetJobOutput struct {
-	Body struct {
-		Job *JobOutput `json:"job" doc:"The job"`
-	}
+	Body GetJobResponseBody
+}
+
+type GetJobResponseBody struct {
+	Job *JobOutput `json:"job" doc:"The job"`
 }
 
 func (api *internalAPI) getJobHandler(ctx context.Context, input *struct {
@@ -17,7 +19,7 @@ func (api *internalAPI) getJobHandler(ctx context.Context, input *struct {
 	jobID := input.JobID
 
 	// Get job from database
-	job, err := api.queries.GetJobByID(ctx, jobID)
+	job, err := api.jobService.GetJobByID(ctx, jobID)
 	if err != nil {
 		return nil, err
 	}

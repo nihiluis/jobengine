@@ -1,4 +1,4 @@
-package database
+package utils
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// stringToUUID converts a string ID to pgtype.UUID
-func stringToPgUUID(id string) (pgtype.UUID, error) {
+// StringToPgUUID converts a string ID to pgtype.UUID
+func StringToPgUUID(id string) (pgtype.UUID, error) {
 	var pgID pgtype.UUID
 	if err := pgID.Scan(id); err != nil {
 		return pgID, fmt.Errorf("invalid UUID format: %w", err)
@@ -16,7 +16,8 @@ func stringToPgUUID(id string) (pgtype.UUID, error) {
 	return pgID, nil
 }
 
-func stringToGoogleUUID(id string) (uuid.UUID, error) {
+// StringToGoogleUUID converts a string ID to uuid.UUID
+func StringToGoogleUUID(id string) (uuid.UUID, error) {
 	parsed, err := uuid.Parse(id)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("invalid UUID format: %w", err)
