@@ -40,6 +40,11 @@ docker build -t jobengine .
 docker run -p 8080:8080 jobengine
 ```
 
+```bash
+# Use package registry
+docker pull ghcr.io/nihiluis/jobengine:latest
+```
+
 ## Code generation
 ```bash
 sqlc generate
