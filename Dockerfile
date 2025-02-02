@@ -1,12 +1,11 @@
-FROM golang:1.23 as builder
+FROM golang:1.23 AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY . .
+
 RUN go mod download
 
-COPY *.go .
-COPY migrations ./migrations
 RUN CGO_ENABLED=0 GOOS=linux go build -o /main
 
 FROM golang:1.23-alpine
@@ -14,7 +13,7 @@ FROM golang:1.23-alpine
 WORKDIR /app
 
 COPY --from=builder /main .
-COPY --from=builder /migrations ./migrations
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 8080
 
