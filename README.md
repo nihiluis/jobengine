@@ -1,6 +1,12 @@
 # jobengine
 Simple Go service that manages job state with a PostgreSQL backend.
 
+## Project structure
+- `job/`: Reads and writes job states to the database
+- `api/`: API handlers and routes
+- `db/`: Wraps the PostgreSQL client and SQLC code generation
+- `migrations/`: Database migrations
+
 ## Requirements
 - Go 1.22+
 - PostgreSQL 12+
