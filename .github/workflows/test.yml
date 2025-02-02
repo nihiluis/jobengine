@@ -3,8 +3,18 @@ name: Test
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'scripts/**'
+      - 'migrations/**'
+      - 'sqlc/**'
+      - '*.md'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'scripts/**'
+      - 'migrations/**'
+      - 'sqlc/**'
+      - '*.md'
   workflow_dispatch:
 
 jobs:
