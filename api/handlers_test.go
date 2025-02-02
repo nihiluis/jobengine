@@ -152,5 +152,5 @@ func TestGetJobsInvalidStatus(t *testing.T) {
 
 	resp := humaApi.Get("/api/v1/jobs/status/invalid-status")
 
-	assert.Equal(t, http.StatusBadRequest, resp.Code)
+	assert.Equal(t, http.StatusUnprocessableEntity, resp.Code)
 }
