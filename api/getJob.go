@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+
+	"github.com/rs/zerolog/log"
 )
 
 type GetJobOutput struct {
@@ -27,6 +29,12 @@ func (api *internalAPI) getJobHandler(ctx context.Context, input *struct {
 	resp := &GetJobOutput{}
 	resp.Body.Job = &JobOutput{}
 	resp.Body.Job.FromQueries(job)
+
+	log.Info().
+		Str("id", resp.Body.Job.ID).
+		Str("type", resp.Body.Job.JobType).
+		Str("status", resp.Body.Job.Status).
+		Msg("getJob")
 
 	return resp, nil
 }

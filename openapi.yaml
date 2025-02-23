@@ -91,12 +91,12 @@ components:
           format: uri
           type: string
       type: object
-    FinishJobInputBody:
+    FinishJobRequestBody:
       additionalProperties: false
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/FinishJobInputBody.json
+          example: https://example.com/schemas/FinishJobRequestBody.json
           format: uri
           readOnly: true
           type: string
@@ -119,12 +119,12 @@ components:
         - result
         - status
       type: object
-    FinishJobOutputBody:
+    FinishJobResponseBody:
       additionalProperties: false
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/FinishJobOutputBody.json
+          example: https://example.com/schemas/FinishJobResponseBody.json
           format: uri
           readOnly: true
           type: string
@@ -135,12 +135,12 @@ components:
       required:
         - message
       type: object
-    GetJobOutputBody:
+    GetJobResponseBody:
       additionalProperties: false
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/GetJobOutputBody.json
+          example: https://example.com/schemas/GetJobResponseBody.json
           format: uri
           readOnly: true
           type: string
@@ -150,12 +150,12 @@ components:
       required:
         - job
       type: object
-    GetJobsOutputBody:
+    GetJobsResponseBody:
       additionalProperties: false
       properties:
         $schema:
           description: A URL to the JSON Schema for this object.
-          example: https://example.com/schemas/GetJobsOutputBody.json
+          example: https://example.com/schemas/GetJobsResponseBody.json
           format: uri
           readOnly: true
           type: string
@@ -256,14 +256,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FinishJobInputBody"
+              $ref: "#/components/schemas/FinishJobRequestBody"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FinishJobOutputBody"
+                $ref: "#/components/schemas/FinishJobResponseBody"
           description: OK
         default:
           content:
@@ -272,6 +272,41 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Finish a job
+      tags:
+        - Jobs
+  /api/v1/jobs/status/{status}:
+    get:
+      description: Get jobs
+      operationId: get-jobs
+      parameters:
+        - description: The status of the jobs to get
+          in: path
+          name: status
+          required: true
+          schema:
+            description: The status of the jobs to get
+            enum:
+              - pending
+              - processing
+              - completed
+              - failed
+              - cancelled
+              - retrying
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetJobsResponseBody"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Get jobs
       tags:
         - Jobs
   /api/v1/jobs/{id}:
@@ -291,7 +326,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetJobOutputBody"
+                $ref: "#/components/schemas/GetJobResponseBody"
           description: OK
         default:
           content:
@@ -322,38 +357,3 @@ paths:
       summary: Health check endpoint
       tags:
         - Health
-  /jobs:
-    get:
-      description: Get jobs
-      operationId: get-jobs
-      parameters:
-        - description: The status of the jobs to get
-          in: path
-          name: status
-          required: true
-          schema:
-            description: The status of the jobs to get
-            enum:
-              - pending
-              - processing
-              - completed
-              - failed
-              - cancelled
-              - retrying
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetJobsOutputBody"
-          description: OK
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ErrorModel"
-          description: Error
-      summary: Get jobs
-      tags:
-        - Jobs
